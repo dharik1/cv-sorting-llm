@@ -1,0 +1,30 @@
+CV Sorting using LLMs (CS02) - execution syntax
+Requirements: Python 3.9+ and Ollama (https://ollama.com/download).
+No API key is needed: all models run locally through Ollama.
+
+1) One-time setup
+pip install pypdf python-docx
+ollama serve                    (separate terminal; skip if the Ollama desktop app is running)
+ollama pull granite4.2:3b       (LLM-1: structured extraction, 2.2 GB)
+ollama pull qwen3.5:9b          (LLM-2: requirement-level judge, 6.6 GB)
+ollama pull nomic-embed-text    (embedding model, 0.3 GB)
+(missing models are also downloaded automatically on the first run)
+
+2) Rank a folder of CVs (.pdf/.docx/.txt) against a job description (.txt/.pdf/.docx)
+python main.py --jd ./job_description.txt --cvs ./cvs
+
+3) Rank and evaluate against relevance labels (CSV header "file,relevance", values 0-3)
+python main.py --jd ./job_description.txt --cvs ./cvs --labels ./labels.csv --out ./output
+
+4) Rank, then refine interactively (show evidence, re-weight requirements, filter by skill, add criteria)
+python main.py --jd ./job_description.txt --cvs ./cvs --interactive
+
+5) Useful options (python main.py --help lists all)
+--require "Kubernetes,PyTorch"   hard skill filter
+--top-k 20                       judge only the 20 most similar CVs with LLM-2 (large pools)
+--think                          enable LLM-2 thinking mode (slower)
+--ollama-url http://host:11434   use a remote Ollama server (or set OLLAMA_HOST)
+
+Outputs (in --out): ranking.csv, ranking_details.json, evaluation_metrics.csv, evaluation_ranks.csv
+Runtime: about 1-2 minutes per CV on a 16 GB laptop (progress is printed per CV); results are cached in ./.cache,
+so re-running the same inputs or refining interactively takes seconds.
